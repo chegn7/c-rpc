@@ -8,6 +8,12 @@
     <artifactId>c-rpc</artifactId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
+    <modules>
+        <module>protocol</module>
+        <module>transport</module>
+        <module>serialization</module>
+        <module>common</module>
+    </modules>
 
     <properties>
         <project.version>1.0-SNAPSHOT</project.version>
@@ -21,6 +27,8 @@
         <slfj-api.version>1.7.36</slfj-api.version>
         <logback-classic.version>1.2.11</logback-classic.version>
         <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
+        <kryo.version>5.3.0</kryo.version>
+        <jackson-databind.version>2.13.2.2</jackson-databind.version>
     </properties>
 
     <dependencyManagement>
@@ -39,6 +47,11 @@
                 <groupId>com.alibaba</groupId>
                 <artifactId>fastjson</artifactId>
                 <version>${fastjson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.esotericsoftware</groupId>
+                <artifactId>kryo</artifactId>
+                <version>${kryo.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -65,6 +78,12 @@
             <artifactId>logback-classic</artifactId>
             <version>${logback-classic.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson-databind.version}</version>
+        </dependency>
+
     </dependencies>
 
 </project>
