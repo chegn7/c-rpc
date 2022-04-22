@@ -13,6 +13,8 @@
         <module>transport</module>
         <module>serialization</module>
         <module>common</module>
+        <module>client</module>
+        <module>server</module>
     </modules>
 
     <properties>
@@ -29,6 +31,7 @@
         <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
         <kryo.version>5.3.0</kryo.version>
         <jackson-databind.version>2.13.2.2</jackson-databind.version>
+        <netty-all.version>4.1.76.Final</netty-all.version>
     </properties>
 
     <dependencyManagement>
@@ -39,11 +42,6 @@
                 <version>${commons.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-servlet</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>com.alibaba</groupId>
                 <artifactId>fastjson</artifactId>
                 <version>${fastjson.version}</version>
@@ -52,6 +50,11 @@
                 <groupId>com.esotericsoftware</groupId>
                 <artifactId>kryo</artifactId>
                 <version>${kryo.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+                <version>${netty-all.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -83,6 +86,8 @@
             <artifactId>jackson-databind</artifactId>
             <version>${jackson-databind.version}</version>
         </dependency>
+
+
 
     </dependencies>
 
