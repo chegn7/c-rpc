@@ -31,8 +31,6 @@ public class ClientProxy implements InvocationHandler {
                 .build();
         request.setDescriptor(descriptor);
         request.setArgs(args);
-        return new Client().send(request,host,port);
+        return new Client(host,port).send(request,host,port);
     }
-
-
 }
