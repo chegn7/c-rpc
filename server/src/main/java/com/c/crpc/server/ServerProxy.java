@@ -2,6 +2,7 @@ package com.c.crpc.server;
 
 import com.c.crpc.common.utils.ReflectionUtil;
 import com.c.crpc.serialization.Serializer;
+import com.c.crpc.transport.RequestHandler;
 import com.c.crpc.transport.TransportServer;
 
 /**
@@ -14,6 +15,8 @@ public class ServerProxy {
     private TransportServer transportServer;
     private ServiceManager serviceManager;
 
+    private RequestHandler handler;
+
     public ServerProxy(ServerConfig config) {
         this.config = config;
 
@@ -22,7 +25,7 @@ public class ServerProxy {
         serviceManager = new ServiceManager();
 
         transportServer = ReflectionUtil.newInstance(config.getTransportServer());
-        transportServer.init(config.getPort(), serviceManager, serializer);
+        transportServer.init(config.getPort(), new RequestHandlerImpl(serviceManager, serializer));
     }
 
     public <T> void register(Class<T> clazz, T bean) {

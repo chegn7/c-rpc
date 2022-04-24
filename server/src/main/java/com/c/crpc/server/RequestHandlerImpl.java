@@ -4,6 +4,7 @@ import com.c.crpc.common.utils.ReflectionUtil;
 import com.c.crpc.protocol.Request;
 import com.c.crpc.protocol.Response;
 import com.c.crpc.serialization.Serializer;
+import com.c.crpc.transport.RequestHandler;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -13,11 +14,16 @@ import java.io.*;
 @Slf4j
 @AllArgsConstructor
 @Data
-public class ServiceInvoker implements Runnable {
+public class RequestHandlerImpl extends RequestHandler implements Runnable {
     private ServiceManager manager;
     private InputStream inputStream;
     private OutputStream outputStream;
     private Serializer serializer;
+
+    public RequestHandlerImpl(ServiceManager manager, Serializer serializer) {
+        this.manager = manager;
+        this.serializer = serializer;
+    }
 
     public Object invoke(ServiceInstance instance, Request request) {
         return ReflectionUtil.invoke(instance.getTarget(), instance.getMethod(), request.getArgs());
@@ -56,5 +62,11 @@ public class ServiceInvoker implements Runnable {
         } catch (IOException e) {
             log.error("invoke remote method error");
         }
+    }
+
+    @Override
+    public void init(InputStream receiveStream, OutputStream responseStream) {
+        this.inputStream = receiveStream;
+        this.outputStream = responseStream;
     }
 }

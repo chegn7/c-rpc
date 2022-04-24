@@ -2,8 +2,6 @@ package com.c.crpc.transport.socket;
 
 import com.c.crpc.common.exception.ServerException;
 import com.c.crpc.serialization.Serializer;
-import com.c.crpc.server.ServiceInvoker;
-import com.c.crpc.server.ServiceManager;
 import com.c.crpc.transport.RequestHandler;
 import com.c.crpc.transport.TransportServer;
 import lombok.extern.slf4j.Slf4j;
@@ -58,7 +56,8 @@ public class SocketServer implements TransportServer {
                 log.info("client connected : " + socket.getInetAddress());
                 InputStream is = socket.getInputStream();
                 OutputStream os = socket.getOutputStream();
-                threadPool.execute(new ServiceInvoker(manager, is, os, serializer));
+                handler.init(is,os);
+                threadPool.execute(handler);
             }
         } catch (IOException e) {
             throw new ServerException("socket server error");
