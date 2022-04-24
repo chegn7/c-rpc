@@ -7,6 +7,10 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 反射工具类
+ * @date 2022年4月24日 21点00分
+ */
 @Slf4j
 public class ReflectionUtil {
 
@@ -20,8 +24,8 @@ public class ReflectionUtil {
         try {
             return clazz.getDeclaredConstructor().newInstance();
         } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new IllegalStateException(e);
+            log.error("failed to create instance : " + e.getMessage(), e);
+            throw new RuntimeException(e);
         }
     }
 

@@ -1,14 +1,13 @@
 package com.c.crpc.protocol;
 
+import com.c.crpc.common.enumeration.ResponseCode;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.Objects;
 
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
 public class Response {
     // 响应状态码
     int code;
@@ -16,6 +15,11 @@ public class Response {
     String message;
     // 响应返回数据
     Object data;
+
+    public Response() {
+        code = ResponseCode.SUCCESS.getCode();
+        message=ResponseCode.SUCCESS.getMessage();
+    }
 
     @Override
     public boolean equals(Object o) {

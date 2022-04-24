@@ -25,7 +25,7 @@ public class ServiceManager {
      * @param target
      * @param <T>
      */
-    public <T> void register(Class<T> clazz, T target) {
+    public synchronized  <T> void register(Class<T> clazz, T target) {
         for (Method method : ReflectionUtil.getPublicMethods(clazz)) {
             ServiceDescriptor descriptor = new ServiceDescriptor();
             descriptor.setMethodName(method.getName());
@@ -36,11 +36,10 @@ public class ServiceManager {
             instance.setMethod(method);
             instance.setTarget(target);
             services.put(descriptor,instance);
-//            System.out.println(descriptor);
         }
     }
 
-    public ServiceInstance findService(Request request) {
+    public synchronized ServiceInstance findService(Request request) {
         return services.get(request.getDescriptor());
     }
 }

@@ -1,36 +1,38 @@
 package com.c.crpc.client;
 
-import com.c.crpc.protocol.Request;
-import com.c.crpc.protocol.ServiceDescriptor;
+import com.c.crpc.common.utils.ReflectionUtil;
+import com.c.crpc.serialization.Serializer;
+import com.c.crpc.transport.TransportClient;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
-public class ClientProxy implements InvocationHandler {
+public class ClientProxy {
+    private ClientConfig config;
     private String host;
     private int port;
+    private Serializer serializer;
 
-    public ClientProxy(String host, int port) {
-        this.host = host;
-        this.port = port;
+    private TransportClient transportClient;
+
+    public ClientProxy() {
+        this(new ClientConfig());
+    }
+
+    public ClientProxy(ClientConfig config) {
+        this.config = config;
+
+        host = config.getHost();
+        port = config.getPort();
+
+        transportClient = ReflectionUtil.newInstance(config.getTransportClient());
+        transportClient.init(host, port);
+
+        serializer = ReflectionUtil.newInstance(config.getSerializer());
+
     }
 
     public <T> T getProxyInstance(Class<T> clazz) {
-        return (T) Proxy.newProxyInstance(clazz.getClassLoader(),new Class[]{clazz}, this);
+        return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class[]{clazz},new RemoteInvoker(transportClient, serializer));
     }
 
-    @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        Request request = new Request();
-        ServiceDescriptor descriptor = ServiceDescriptor.builder()
-                .interfaceName(method.getDeclaringClass().getName())
-                .methodName(method.getName())
-                .returnType(method.getReturnType())
-                .parameterTypes(method.getParameterTypes())
-                .build();
-        request.setDescriptor(descriptor);
-        request.setArgs(args);
-        return new Client(host,port).send(request,host,port);
-    }
 }

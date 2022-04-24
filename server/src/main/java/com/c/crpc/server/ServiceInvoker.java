@@ -54,7 +54,7 @@ public class ServiceInvoker implements Runnable {
             dos.write(responseBytes);
             log.info("write complete, response : " + response);
         } catch (IOException e) {
-            log.error("执行远程方法出错");
+            log.error("invoke remote method error");
         }
     }
 }

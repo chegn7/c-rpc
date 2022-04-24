@@ -1,51 +1,82 @@
 package com.c.crpc.transport.socket;
 
+import com.c.crpc.common.exception.ServerException;
+import com.c.crpc.serialization.Serializer;
+import com.c.crpc.server.ServiceInvoker;
+import com.c.crpc.server.ServiceManager;
+import com.c.crpc.transport.RequestHandler;
+import com.c.crpc.transport.TransportServer;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 @Slf4j
-public class SocketServer {
-    public void start(int port) {
+public class SocketServer implements TransportServer {
+
+    private ExecutorService threadPool;
+    private Serializer serializer;
+    private int port;
+    private ServerSocket serverSocket;
+
+    private RequestHandler handler;
+
+
+
+    @Override
+    public void init(int port, RequestHandler handler) {
+        this.port = port;
+        this.serializer = serializer;
+
+        this.handler = handler;
+
+        int corePoolSize = 5;
+        int maxPoolSize = 10;
+        long keepAliveTime = 60;
+        BlockingQueue<Runnable> blockingQueue = new ArrayBlockingQueue<>(20);
+        ThreadFactory threadFactory = Executors.defaultThreadFactory();
+
+        threadPool = new ThreadPoolExecutor(
+                corePoolSize, maxPoolSize,
+                keepAliveTime, TimeUnit.SECONDS,
+                blockingQueue,
+                threadFactory
+        );
+    }
+
+    @Override
+    public void start() {
         try {
-            ServerSocket serverSocket = new ServerSocket(port);
+            serverSocket = new ServerSocket(port);
+            log.info("server starting....");
             Socket socket;
             while ((socket = serverSocket.accept()) != null) {
-                log.info("client connected : "
-                        + socket.getInetAddress().getHostName()
-                        + ":" + socket.getInetAddress().getHostAddress());
-                ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-                ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-                String msg = (String) ois.readObject();
-                log.info("server receive message : " + msg);
-                oos.writeObject("this is a message from server");
-                oos.flush();
+                log.info("client connected : " + socket.getInetAddress());
+                InputStream is = socket.getInputStream();
+                OutputStream os = socket.getOutputStream();
+                threadPool.execute(new ServiceInvoker(manager, is, os, serializer));
             }
-            socket.close();
         } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
+            throw new ServerException("socket server error");
         }
     }
 
-    public static void main(String[] args) {
-        SocketServer server = new SocketServer();
-        int port = 3210;
-        ExecutorService threadPool = new ThreadPoolExecutor(5,10,60, TimeUnit.SECONDS,new ArrayBlockingQueue<>(20));
-        threadPool.execute(new Runnable() {
-            @Override
-            public void run() {
-                server.start(port);
+    @Override
+    public void stop() {
+        if (serverSocket != null) {
+            try {
+                serverSocket.close();
+            } catch (IOException e) {
+                log.info("stop socket server error : " + e.getMessage(), e);
+                throw new ServerException("close socket server error");
             }
-        });
+        }
+        log.info("stop socket server success");
     }
+
+
 }

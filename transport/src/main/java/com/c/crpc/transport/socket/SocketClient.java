@@ -1,45 +1,57 @@
 package com.c.crpc.transport.socket;
 
+import com.c.crpc.common.exception.ClientException;
+import com.c.crpc.protocol.Request;
+import com.c.crpc.protocol.Response;
+import com.c.crpc.serialization.Serializer;
+import com.c.crpc.transport.TransportClient;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
-public class SocketClient {
+@Slf4j
+@Data
+@NoArgsConstructor
+public class SocketClient implements TransportClient {
+    private int port;
+    private String host;
 
-    
-    public <T> T send(T t, String host, int port) {
-        try {
-            Socket socket = new Socket(host, port);
-            ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-            oos.writeObject(t);
-            ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-            return (T) ois.readObject();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
 
+    @Override
+    public void init(String host, int port) {
+        this.port = port;
+        this.host = host;
     }
 
-    public static void main(String[] args) {
-        int port = 3210;
-        String host = "127.0.0.1";
-        ExecutorService threadPool = new ThreadPoolExecutor(5, 10, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<>(10));
-        for (int i = 0; i < 10; i++) {
-            threadPool.execute(new Runnable() {
-                @Override
-                public void run() {
-                    SocketClient client = new SocketClient();
-                    String receive = client.send("hi", host, port);
-                    System.out.println(receive);
-                }
-            });
+    @Override
+    public Response send(Request request, Serializer serializer) {
+        try (Socket socket = new Socket(host, port)) {
+            DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+            DataInputStream dis = new DataInputStream(socket.getInputStream());
+            byte[] requestBytes = serializer.serialize(request);
+            log.info("write start");
+            dos.writeInt(requestBytes.length);
+            dos.write(requestBytes);
+            log.info("write complete");
+            log.info("read start");
+            int length = dis.readInt();
+            log.info("response byte array length : " + length);
+            byte[] responseBytes = new byte[length];
+            if (length > 0) dis.readFully(responseBytes);
+            else throw new IllegalStateException();
+            log.info("read complete");
+            return serializer.deserialize(responseBytes, Response.class);
+        } catch (IOException e) {
+            throw new ClientException("socket client error");
         }
+    }
+
+    @Override
+    public void close() {
     }
 }
